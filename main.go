@@ -9,21 +9,7 @@ import (
 
 func main() {
 
-	cfg := newConfig(opts...)
-
-	c := controller.New(
-		processor.NewFactory(
-			selector.NewWithHistogramDistribution(),
-			cfg.temporalitySelector,
-		),
-		controller.WithCollectPeriod(0),
-	)
-	exp := &Exporter{
-		controller:          c,
-		temporalitySelector: cfg.temporalitySelector,
-	}
-
-	return c, exp
+	// Exporter being used here is not thread safe; Collect() has to be manually called
 
 	ctx := context.Background()
 	mp, exp := metrictest.NewTestMeterProvider()
