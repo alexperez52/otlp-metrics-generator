@@ -12,14 +12,16 @@ func main() {
 
 	// Utilizing metrictest
 	// Exporter being used here is not thread safe; Collect() has to be manually called
+	// TODO: Use OTLP stock exporter instead of the custom exporter found in metrictest
 
 	ctx := context.Background()
 	mp, exp := metrictest.NewTestMeterProvider()
 	meter := mp.Meter("OTLP-Metrics")
 
+	attrs := []attribute.KeyValue{attribute.Bool("test", true)}
+
 	//count
 	fcnt, err := meter.SyncInt64().Counter("iCount")
-	attrs := []attribute.KeyValue{attribute.Bool("test", true)}
 
 	if err != nil {
 		fmt.Println(err)
@@ -61,11 +63,6 @@ func main() {
 
 	ihis.Record(ctx, 24)
 	ihis.Record(ctx, 25)
-	ihis.Record(ctx, 25)
-
-	ihis.Record(ctx, 25)
-	ihis.Record(ctx, 25)
-	ihis.Record(ctx, 25)
 
 	err = exp.Collect(context.Background())
 	if err != nil {
@@ -76,8 +73,27 @@ func main() {
 		fmt.Println(err)
 	}
 
+	ihis2, err := meter.SyncInt64().Histogram("iHist2")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	ihis2.Record(ctx, 24)
+	ihis2.Record(ctx, 25)
+	ihis2.Record(ctx, 26)
+
+	err = exp.Collect(context.Background())
+	if err != nil {
+		fmt.Println(err)
+	}
+	hisOut2, err := exp.GetByName("iHist2")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(hisOut2)
 	// Printing out the metrics
 	fmt.Println(counterOut)
 	fmt.Println(gaugeOut)
 	fmt.Println(hisOut)
+
 }
