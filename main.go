@@ -14,6 +14,11 @@ func main() {
 	// Exporter being used here is not thread safe; Collect() has to be manually called
 	// TODO: Use OTLP stock exporter instead of the custom exporter found in metrictest
 
+	otlpMetricWithCustomExporter()
+
+}
+
+func otlpMetricWithCustomExporter() {
 	ctx := context.Background()
 	mp, exp := metrictest.NewTestMeterProvider()
 	meter := mp.Meter("OTLP-Metrics")
@@ -95,5 +100,4 @@ func main() {
 	fmt.Println(counterOut)
 	fmt.Println(gaugeOut)
 	fmt.Println(hisOut)
-
 }
