@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	runtimemetrics "go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/metric/global"
@@ -127,9 +126,10 @@ func configureMetrics(ctx context.Context, client *client) {
 	global.SetMeterProvider(ctrl)
 	client.ctrl = ctrl
 
-	if err := runtimemetrics.Start(); err != nil {
-		fmt.Printf("runtimemetrics.Start failed: %s", err)
-	}
+	// Commenting this out to not get dummy metrics
+	// if err := runtimemetrics.Start(); err != nil {
+	// 	fmt.Printf("runtimemetrics.Start failed: %s", err)
+	// }
 }
 
 // Wrapper function to shutdown the active client
