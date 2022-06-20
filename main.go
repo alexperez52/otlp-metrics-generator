@@ -57,7 +57,7 @@ func main() {
 	defer Shutdown(ctx)
 	// Async create counter and counterobserver
 	go counter(ctx)
-	// go counterObserver(ctx)
+	go counterObserver(ctx)
 	fmt.Println("reporting measurements to localhost:4318... (press Ctrl+C to stop)")
 
 	ch := make(chan os.Signal, 3)
@@ -170,7 +170,7 @@ func newOwn() *own {
 // Created a counter and adds 1 every second
 func counter(ctx context.Context) {
 	counter, _ := meter.SyncInt64().Counter(
-		"MyCounter_1",
+		"MyCounter",
 		instrument.WithUnit("1"),
 		instrument.WithDescription("This is a sample counter that increments by 1 every second."),
 	)
@@ -181,24 +181,24 @@ func counter(ctx context.Context) {
 	}
 }
 
-// func counterObserver(ctx context.Context) {
-// 	counter, _ := meter.AsyncInt64().Counter(
-// 		"some.prefix.counter_observer",
-// 		instrument.WithUnit("1"),
-// 		instrument.WithDescription("TODO"),
-// 	)
+func counterObserver(ctx context.Context) {
+	counter, _ := meter.AsyncInt64().Counter(
+		"MyCounter_observer",
+		instrument.WithUnit("1"),
+		instrument.WithDescription("This is a sample counter observer"),
+	)
 
-// 	var number int64
-// 	if err := meter.RegisterCallback(
-// 		[]instrument.Asynchronous{
-// 			counter,
-// 		},
-// 		// SDK periodically calls this function to collect data.
-// 		func(ctx context.Context) {
-// 			number++
-// 			counter.Observe(ctx, number)
-// 		},
-// 	); err != nil {
-// 		panic(err)
-// 	}
-// }
+	var number int64
+	if err := meter.RegisterCallback(
+		[]instrument.Asynchronous{
+			counter,
+		},
+		// SDK periodically calls this function to collect data.
+		func(ctx context.Context) {
+			number++
+			counter.Observe(ctx, number)
+		},
+	); err != nil {
+		panic(err)
+	}
+}
