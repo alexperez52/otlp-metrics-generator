@@ -91,7 +91,6 @@ func (dsn *DSN) AppAddr() string {
 func otlpmetricClient(dsn *DSN) otlpmetric.Client {
 	options := []otlpmetrichttp.Option{
 		otlpmetrichttp.WithInsecure(),
-		// otlpmetrichttp.WithCompression(otlpmetrichttp.NoCompression),
 	}
 
 	return otlpmetrichttp.NewClient(options...)
@@ -126,7 +125,7 @@ func configureMetrics(ctx context.Context, client *client) {
 	global.SetMeterProvider(ctrl)
 	client.ctrl = ctrl
 
-	// Commenting this out to not get dummy metrics
+	// Commenting this out to not get dummy metrics from runtime data
 	// if err := runtimemetrics.Start(); err != nil {
 	// 	fmt.Printf("runtimemetrics.Start failed: %s", err)
 	// }
