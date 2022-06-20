@@ -21,15 +21,16 @@ import (
 	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
 )
 
-var meter = global.MeterProvider().Meter("app_or_package_name")
-var atomicClient atomic.Value
-
-//fallback client currently now used because otel will default to localhost:4318 on HTTP
-var fallbackClient = newClient(&DSN{
-	Original: "http://localhost:8000",
-	Host:     "localhost",
-	Port:     "8000",
-})
+var (
+	meter        = global.MeterProvider().Meter("app_or_package_name")
+	atomicClient atomic.Value
+	//fallback client currently now used because otel will default to localhost:4318 on HTTP
+	fallbackClient = newClient(&DSN{
+		Original: "http://localhost:8000",
+		Host:     "localhost",
+		Port:     "8000",
+	})
+)
 
 // Structure to store custom DSN settings
 type DSN struct {
@@ -46,6 +47,39 @@ type client struct {
 
 // Dummy struct (probably not needed)
 type own struct {
+}
+
+func main() {
+	// Start a context background and configure a new otel instance to being sending metrics to localhost:4318
+	ctx := context.Background()
+	own := newOwn()
+	own.configureOtel()
+
+	defer Shutdown(ctx)
+	// Async create counter and counterobserver
+	go counter(ctx)
+	go counterObserver(ctx)
+	fmt.Println("reporting measurements to localhost:4318... (press Ctrl+C to stop)")
+
+	ch := make(chan os.Signal, 3)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+	<-ch
+}
+
+// Function that sets a custom DSN and starts a new client with those DSN settings
+// Also starts the otel client to begin to send metrics generated
+func (own *own) configureOtel(opts ...instrument.Option) {
+	ctx := context.TODO()
+
+	dsn := &DSN{
+		Original: "http://localhost:8000",
+		Host:     "localhost",
+		Port:     "8000",
+	}
+	client := newClient(dsn)
+	configureMetrics(ctx, client)
+	atomicClient.Store(client)
+
 }
 
 // Function to join a host and a port
@@ -98,23 +132,6 @@ func configureMetrics(ctx context.Context, client *client) {
 	}
 }
 
-func main() {
-	// Start a context background and configure a new otel instance to being sending metrics to localhost:4318
-	ctx := context.Background()
-	own := newOwn()
-	own.configureOtel()
-
-	defer Shutdown(ctx)
-	// Async create counter and counterobserver
-	go counter(ctx)
-	go counterObserver(ctx)
-	fmt.Println("reporting measurements to localhost:4318... (press Ctrl+C to stop)")
-
-	ch := make(chan os.Signal, 3)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-	<-ch
-}
-
 // Wrapper function to shutdown the active client
 func Shutdown(ctx context.Context) error {
 	return activeClient().Shutdown(ctx)
@@ -137,22 +154,6 @@ func activeClient() *client {
 		return fallbackClient
 	}
 	return v.(*client)
-}
-
-// Function that sets a custom DSN and starts a new client with those DSN settings
-// Also starts the otel client to begin to send metrics generated
-func (own *own) configureOtel(opts ...instrument.Option) {
-	ctx := context.TODO()
-
-	dsn := &DSN{
-		Original: "http://localhost:8000",
-		Host:     "localhost",
-		Port:     "8000",
-	}
-	client := newClient(dsn)
-	configureMetrics(ctx, client)
-	atomicClient.Store(client)
-
 }
 
 // Creates a new client given a dsn
