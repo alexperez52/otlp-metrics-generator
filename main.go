@@ -100,6 +100,7 @@ func counterObserver(ctx context.Context) {
 		instrument.WithDescription("This is a sample counter observer"),
 	)
 
+	// This could be any other incremental data point to be observed and sent as a Counter metric
 	var number int64
 	if err := meter.RegisterCallback(
 		[]instrument.Asynchronous{
