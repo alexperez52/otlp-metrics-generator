@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	meter = global.MeterProvider().Meter("app_or_package_name")
+	meter = global.MeterProvider().Meter("OTLP_METRIC_SAMPLE_APP")
 )
 
 func main() {
