@@ -18,6 +18,16 @@ import (
 	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
 )
 
+/*
+   This application currently creates an Async counter and updates it to be collected every 3 seconds
+   This application is for experimental purposes only and will break once the OpenTelemetry SDK
+   receives updates or has major changes.
+   Eventually this will be evolved into a functional Sample application that emits Metrics, Logs
+   and traces.
+   Unstable components will be identified and documented.
+   This sample app will eventually follow a specific `Sample app requirements spec`
+*/
+
 var (
 	meter = global.MeterProvider().Meter("OTLP_METRIC_SAMPLE_APP")
 )
