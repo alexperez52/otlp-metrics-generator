@@ -14,6 +14,7 @@ import (
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/metric/instrument"
 	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
+	"go.opentelemetry.io/otel/sdk/metric/export/aggregation"
 	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
 	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
 )
@@ -70,7 +71,15 @@ func startClient(ctx context.Context) func() {
 	}
 
 	// The default endpoint is being used (localhost:4318)
-	metricExp, err := otlpmetric.New(ctx, otlpmetricClient(endpoint))
+
+	// Cumulative Temporality Selector indicates new values SHOULD never be less than the previous value
+	cumulativeSelector := aggregation.CumulativeTemporalitySelector()
+
+	// Delta Temporality Selector indicates that values SHOULD be non negative. Could be less than the previous value
+	// **Commented out for now**
+	// deltaSelector := aggregation.DeltaTemporalitySelector()
+
+	metricExp, err := otlpmetric.New(ctx, otlpmetricClient(endpoint), otlpmetric.WithMetricAggregationTemporalitySelector(cumulativeSelector))
 	if err != nil {
 		fmt.Printf("otlpmetric.New failed: %s", err)
 	}
